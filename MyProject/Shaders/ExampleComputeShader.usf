@@ -1,0 +1,16 @@
+// ExampleComputeShader.usf
+#include "/Engine/Public/Platform.ush"
+
+float Scale;
+float Translate;
+
+RWStructuredBuffer<float> InputBuffer;
+RWStructuredBuffer<float> OutputBuffer;
+
+[numthreads(8, 8, 1)]
+void FunctionMultiply(
+	uint3 DispatchThreadId : SV_DispatchThreadID,
+	uint GroupIndex : SV_GroupIndex)
+{
+    OutputBuffer[DispatchThreadId.x] = InputBuffer[DispatchThreadId.x] * Scale + Translate;
+}
