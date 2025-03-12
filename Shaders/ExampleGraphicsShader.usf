@@ -1,0 +1,52 @@
+// ExampleGrapihcsShader.usf
+#include "/Engine/Public/Platform.ush"
+// HLSL代码的文档见https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-reference
+
+
+// 顶点着色器的输入
+struct VertexAttributes
+{
+	float4 v_position : ATTRIBUTE0; // 顶点位置。
+	//通常情况下我们输入模型坐标系的顶点，经由view matrix和perspective projection matrix变换得到NDC。但为了演示方便起见我们直接输入NDC。
+	float4 v_color : ATTRIBUTE1; // 顶点颜色，取值范围为0.0~1.0
+};
+
+// 顶点着色器的输出，同时也是pixel shader的interpolated输入
+struct Varyings
+{
+	float4 p_position : SV_POSITION; // 顶点着色器输出，需要在NDC(Normalized device coordinate)坐标空间下; 片元着色器(pixel shader)的坐标位置输入
+	float4 p_color : COLOR0; // 顶点着色器输出; 片元颜色输入
+};
+
+
+void MainVS(in VertexAttributes vertex, out Varyings v)
+{
+    float angle = 45.0f * (3.1415926f / 180.0f); // 旋转角度（弧度）
+    float4x4 rotationMatrix = float4x4(
+        cos(angle), -sin(angle), 0, 0,
+        sin(angle), cos(angle), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    );
+    float sx = 0.5, sy = 0.5, sz = 0.5; // 缩放比例
+    float4x4 scaleMatrix = float4x4(
+        sx, 0, 0, 0,
+        0, sy, 0, 0,
+        0, 0, sz, 0,
+        0, 0, 0, 1
+    );
+    float tx = 0, ty = 0, tz = 2; // 平移量
+    float4x4 translationMatrix = float4x4(
+        1, 0, 0, tx,
+        0, 1, 0, ty,
+        0, 0, 1, tz,
+        0, 0, 0, 1
+    );
+    v.p_position = mul(mul(vertex.v_position, rotationMatrix), scaleMatrix); // 此处由于输入的顶点坐标即是NDC，所以不作变换
+    v.p_color = float4(v.p_position.x, v.p_position.y, 1, 1.0);
+}
+
+void MainPS(in Varyings v, out float4 f_color : SV_Target0)
+{
+    f_color = v.p_color; // 每个片元的颜色输出到render target
+}
